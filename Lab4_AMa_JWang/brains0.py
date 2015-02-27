@@ -165,7 +165,10 @@ def main():
         elif D.STATE == "MOVING_FORWARD":
             
             forward_speed = 100
-            angle_speed = int(20 * min(D.MPW_left[1]+pi/2, D.MPW_right[1]-pi/2, key = abs))
+            
+            left_diff = D.MPW_left[1] if D.MPW_left else 0
+            right_diff = D.MPW_right[1] if D.MPW_right else 0
+            angle_speed = int(60 * min(left_diff+pi/2, right_diff-pi/2, key = abs))
 
             print angle_speed
 
