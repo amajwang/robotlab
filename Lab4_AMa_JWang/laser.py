@@ -124,7 +124,7 @@ def draw_laser_ranges():
         NUM_RANGES = len(D.ranges) # should be 360
         for angle in range(NUM_RANGES):
             # print angle, ":", D.ranges[angle]
-            r, theta = scale*D.ranges[angle], radians(angle+84)
+            r, theta = scale*D.ranges[angle], radians(angle+90)
             end_x, end_y = CENTER + int(r*cos(theta)), CENTER - int(r*sin(theta))
             # add line to the ranges image, "D.image"
             cv.Line(D.image, (CENTER,CENTER), (end_x,end_y), cv.RGB(255, 0, 0), 1) # 1 == thickness

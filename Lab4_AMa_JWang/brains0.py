@@ -164,7 +164,7 @@ def main():
 
         elif D.STATE == "MOVING_FORWARD":
             
-            forward_speed = 100
+            forward_speed = 140
 
             left_diff = D.MPW_left[1] if D.MPW_left else 0
             right_diff = D.MPW_right[1] if D.MPW_right else 0
@@ -175,7 +175,7 @@ def main():
             if D.MPW_left and D.MPW_right:
                 left_dis, right_dis = D.MPW_left[2], D.MPW_right[2]
                 print left_dis, right_dis
-                
+
                 if (left_dis - right_dis > distance_threshold and angle_speed > 0) \
                 or (right_dis - left_dis > distance_threshold and angle_speed < 0):
                     angle_speed = 0
