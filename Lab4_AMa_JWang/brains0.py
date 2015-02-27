@@ -38,6 +38,8 @@ def laser_data_callback(data):
     global D
     message = data.data # that's the string
     D.list_laser_data = eval( message ) # Yay, Python!
+    D.MPW_left, D.MPW_right, D.MPW_front = *D.list_laser_data
+
     # print message
     # don't do lots of work here... instead, we'll do it all in main
     # we won't print it... if you want to see this stream use (in a new tab)
@@ -161,7 +163,14 @@ def main():
             pass # do nothing
 
         elif D.STATE == "MOVING_FORWARD":
-            D.robot_publisher.publish( "D.tank(100,100)" )
+            
+            forward_speed = 100
+            angle_speed = 7 * min(D.MPW_left[1]+pi/2, D.MPW_right[1]-pi/2, key = abs)
+
+            lspeed = forward_speed + angle_speed
+            rspeed = forward_speed - angle_speed
+
+            D.robot_publisher.publish( "D.tank({},{})".format(lspeed,rspeed) )
 
         elif D.STATE == "ROTATE_IN_PLACE_LEFT":
             D.robot_publisher.publish( "D.tank(-50,50)" ) 
