@@ -67,7 +67,7 @@ def key_press_callback(data):
 
     if k in 'D':  
         D.STATE = "ROTATE_IN_PLACE_RIGHT"
-        
+
     if k in 'S':  
         D.last_time_clocked = time.time()
         D.robot_publisher.publish( "D.tank(-100,-100)" ) # Yay, Python!
@@ -166,7 +166,7 @@ def main():
         elif D.STATE == "ROTATE_IN_PLACE_LEFT":
             D.robot_publisher.publish( "D.tank(-50,50)" ) 
 
-        elif D.STATE == "ROTATE_IN_PLACE_RIGHT"
+        elif D.STATE == "ROTATE_IN_PLACE_RIGHT":
             D.robot_publisher.publish( "D.tank(50,-50)" )
 
 
