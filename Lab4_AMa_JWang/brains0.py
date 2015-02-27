@@ -165,7 +165,9 @@ def main():
         elif D.STATE == "MOVING_FORWARD":
             
             forward_speed = 100
-            angle_speed = int(7 * min(D.MPW_left[1]+pi/2, D.MPW_right[1]-pi/2, key = abs))
+            angle_speed = int(20 * min(D.MPW_left[1]+pi/2, D.MPW_right[1]-pi/2, key = abs))
+
+            print angle_speed
 
             lspeed = forward_speed + angle_speed
             rspeed = forward_speed - angle_speed
