@@ -139,7 +139,8 @@ def findMPW(Lines):
     """
     MPW_left = MPW_right = MPW_front = MPW_default = [((0,0),(0,0)),0]
 
-    for line in Lines:
+    def getLineInfo(line):
+
         x0, y0, x1, y1 = line[0][0]-CENTER, line[0][1]-CENTER, line[1][0]-CENTER, line[1][1]-CENTER
         A, B, C = (y1-y0), -(x1-x0), (x1*y0-x0*y1) # Ax + By + C = 0
 
@@ -147,20 +148,44 @@ def findMPW(Lines):
         xi,yi = -A*C/length**2, -B*C/length**2
         r,theta = polar(1j*xi-yi)
 
+        return [line, theta, r, length]
 
-        
-        if MPW_left == MPW_default or abs(theta+pi/2) < abs(MPW_left[1]+pi/2):
-            MPW_left = [line, theta]
+    lineinfos = [getLineInfo(line) for line in Lines]
 
-        if MPW_right == MPW_default or abs(theta-pi/2) < abs(MPW_right[1]-pi/2):
-            MPW_right = [line, theta]
 
-        if MPW_front == MPW_default or abs(theta) < abs(MPW_front[1]):
-            MPW_front = [line, theta]
+    def getFilter(theta, threshold = pi/4):
+        return lambda x: abs(x[1]-theta) < threshold
 
-    cv.Line(D.image, *MPW_left[0], color = cv.RGB(0, 255, 255), thickness = 5) # cyan
-    cv.Line(D.image, *MPW_right[0], color = cv.RGB(255, 0, 255), thickness = 5) # magenta
-    cv.Line(D.image, *MPW_front[0], color = cv.RGB(255, 255, 0), thickness = 5) # yellow 
+    def getCompareKey(theta):
+        return lambda x: abs(x[1]-theta)
+
+    def getMPW(theta):
+        filtered = filter(getFilter(theta), lineinfos)
+        return max(filtered, key = getCompareKey(theta)) if filtered else []
+
+    # print filter(getFilter(-pi/2), lineinfos)
+
+    MPW_left = getMPW(-pi/2)
+    MPW_right = getMPW(pi/2)
+    MPW_front = getMPW(0)
+
+    # if MPW_left == MPW_default or abs(theta+pi/2) < abs(MPW_left[1]+pi/2):
+    #         MPW_left = [line, theta]
+
+    # if MPW_right == MPW_default or abs(theta-pi/2) < abs(MPW_right[1]-pi/2):
+    #         MPW_right = [line, theta]
+
+    # if MPW_front == MPW_default or abs(theta) < abs(MPW_front[1]):
+    #         MPW_front = [line, theta]
+
+    if MPW_left:
+        cv.Line(D.image, *MPW_left[0], color = cv.RGB(0, 255, 255), thickness = 5) # cyan
+
+    if MPW_right:
+        cv.Line(D.image, *MPW_right[0], color = cv.RGB(255, 0, 255), thickness = 5) # magenta
+
+    if MPW_front:
+        cv.Line(D.image, *MPW_front[0], color = cv.RGB(255, 255, 0), thickness = 5) # yellow 
 
     pub_laser.publish(String(str([MPW_left, MPW_right, MPW_front])))
 
