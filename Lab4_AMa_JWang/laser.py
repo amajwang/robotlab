@@ -161,7 +161,7 @@ def findMPW(Lines):
 
     def getMPW(theta):
         filtered = filter(getFilter(theta), lineinfos)
-        return max(filtered, key = getCompareKey(theta)) if filtered else []
+        return min(filtered, key = getCompareKey(theta)) if filtered else []
 
     # print filter(getFilter(-pi/2), lineinfos)
 
