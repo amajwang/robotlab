@@ -54,12 +54,21 @@ def key_press_callback(data):
 
     if k in ' ': 
         D.robot_publisher.publish( "toggle commands" ) # Wow!
-    if k in 'W': # 'W' goes to the waiting state
+
+    if k in '`': # goes to the waiting state
         D.robot_publisher.publish( "D.tank(0,0)" ) # Yay, Python!
         D.STATE = "WAITING_TO_START"  # back to waiting to start
-    if k in 'R':  
-        D.STATE = "ROTATE_IN_PLACE"
-    if k in 'B':  
+
+    if k in 'W':  
+        D.STATE = "MOVING_FORWARD"
+
+    if k in 'A':  
+        D.STATE = "ROTATE_IN_PLACE_LEFT"
+
+    if k in 'D':  
+        D.STATE = "ROTATE_IN_PLACE_RIGHT"
+        
+    if k in 'S':  
         D.last_time_clocked = time.time()
         D.robot_publisher.publish( "D.tank(-100,-100)" ) # Yay, Python!
         D.STATE = "BACKING_UP_FOR_A_BIT"
@@ -150,6 +159,18 @@ def main():
 
         elif D.STATE == "WAITING_TO_START":
             pass # do nothing
+
+        elif D.STATE == "MOVING_FORWARD":
+            D.robot_publisher.publish( "D.tank(100,100)" )
+
+        elif D.STATE == "ROTATE_IN_PLACE_LEFT":
+            D.robot_publisher.publish( "D.tank(-50,50)" ) 
+
+        elif D.STATE == "ROTATE_IN_PLACE_RIGHT"
+            D.robot_publisher.publish( "D.tank(50,-50)" )
+
+
+
 
         else:
             print "I don't recognize the state", D.STATE
