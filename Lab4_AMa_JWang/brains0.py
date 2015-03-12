@@ -202,10 +202,12 @@ def main():
             D.STATE = "WAITING_TO_START"
 
         elif D.STATE == "TURN_LEFT":
+            D.last_time_clocked = time.time()
             D.robot_publisher.publish( "D.tank(-50,50)" ) 
             D.STATE = "RIGHT_ANGLE_TURN"
 
         elif D.STATE == "TURN_RIGHT":
+            D.last_time_clocked = time.time()
             D.robot_publisher.publish( "D.tank(50,-50)" )
             D.STATE = "RIGHT_ANGLE_TURN"
 
