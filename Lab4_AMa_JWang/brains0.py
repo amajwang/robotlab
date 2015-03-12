@@ -58,8 +58,7 @@ def key_press_callback(data):
         D.robot_publisher.publish( "toggle commands" ) # Wow!
 
     if k in '`': # goes to the waiting state
-        D.robot_publisher.publish( "D.tank(0,0)" ) # Yay, Python!
-        D.STATE = "WAITING_TO_START"  # back to waiting to start
+        D.STATE = "STOP"
 
     if k in 'W':  
         D.STATE = "MOVING_FORWARD"
@@ -148,19 +147,18 @@ def main():
         # here is our state machine!
         if D.STATE == "BACKING_UP_FOR_A_BIT":
             if current_time > 4.2 + D.last_time_clocked: # 4.2 seconds of wait
-                # don't overflow the robot's command buffer...
-                D.robot_publisher.publish( "D.tank(0,0)" )
-                D.STATE = "ROTATE_IN_PLACE"
-            # else keep waiting
-
-        elif D.STATE == "ROTATE_IN_PLACE":
-            # use D.list_laser_data to find the amount still needed to rotate...
-            # then determine a rotational velocity
-            # or, if it's close enough, switch to a forward-going state!
-            D.robot_publisher.publish( "D.tank(-50,50)" ) 
+                D.STATE = "STOP"
 
         elif D.STATE == "WAITING_TO_START":
             pass # do nothing
+
+        elif D.STATE == "WAITING":
+            pass # do nothing
+
+        elif D.STATE == "RIGHT_ANGLE_TURN":
+            if current_time > 4.2 + D.last_time_clocked: 
+                D.robot_publisher.publish( "D.tank(0,0)" )
+                D.STATE = "MOVING_FORWARD"
 
         elif D.STATE == "MOVING_FORWARD":
         
@@ -171,6 +169,12 @@ def main():
 
             dis_threshold = 100
 
+            if left_dis < 2 * dis_threshold:
+                angle_speed += 0.5 * (2 * dis_threshold - left_dis)
+
+            if right_dis < 2 * dis_threshold:
+                angle_speed -= 0.5 * (2 * dis_threshold - right_dis)
+
             if D.MPW_left and D.MPW_right:
                 # left_dis, right_dis = D.MPW_left[2], D.MPW_right[2]
                 print left_dis, right_dis
@@ -179,27 +183,35 @@ def main():
                 or (right_dis - left_dis > dis_threshold and angle_speed < 0):
                     angle_speed = 0
 
-            if left_dis < 1.5 * dis_threshold:
-                pass
-
-            if right_dis < 1.5 * dis_threshold:
-                pass
-
             print angle_speed
 
 
-            forward_speed = 210 if abs(angle_speed) < 5 else 140
+            forward_speed = 210 - abs(angle_speed)
 
             lspeed = forward_speed + angle_speed
             rspeed = forward_speed - angle_speed
 
             D.robot_publisher.publish( "D.tank({},{})".format(lspeed,rspeed) )
 
-        elif D.STATE == "ROTATE_IN_PLACE_LEFT":
+        elif D.STATE == "STOP":
+            D.robot_publisher.publish( "D.tank(0,0)" )
+            D.STATE = "WAITING_TO_START"
+
+        elif D.STATE == "TURN_LEFT":
             D.robot_publisher.publish( "D.tank(-50,50)" ) 
+            D.STATE = "RIGHT_ANGLE_TURN"
+
+        elif D.STATE == "TURN_RIGHT":
+            D.robot_publisher.publish( "D.tank(50,-50)" )
+            D.STATE = "RIGHT_ANGLE_TURN"
+
+        elif D.STATE == "ROTATE_IN_PLACE_LEFT":
+            D.robot_publisher.publish( "D.tank(-50,50)" )
+            D.STATE = "WAITING"
 
         elif D.STATE == "ROTATE_IN_PLACE_RIGHT":
             D.robot_publisher.publish( "D.tank(50,-50)" )
+            D.STATE = "WAITING"
 
 
 
