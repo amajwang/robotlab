@@ -155,7 +155,7 @@ def main():
         elif D.STATE == "WAITING":
             pass # do nothing
 
-        elif D.STATE == "RIGHT_ANGLE_TURN":
+        elif D.STATE == "90_DEG_TURN":
             if current_time > 4.2 + D.last_time_clocked: 
                 D.robot_publisher.publish( "D.tank(0,0)" )
                 D.STATE = "MOVING_FORWARD"
@@ -204,12 +204,12 @@ def main():
         elif D.STATE == "TURN_LEFT":
             D.last_time_clocked = time.time()
             D.robot_publisher.publish( "D.tank(-50,50)" ) 
-            D.STATE = "RIGHT_ANGLE_TURN"
+            D.STATE = "90_DEG_TURN"
 
         elif D.STATE == "TURN_RIGHT":
             D.last_time_clocked = time.time()
             D.robot_publisher.publish( "D.tank(50,-50)" )
-            D.STATE = "RIGHT_ANGLE_TURN"
+            D.STATE = "90_DEG_TURN"
 
         elif D.STATE == "ROTATE_IN_PLACE_LEFT":
             D.robot_publisher.publish( "D.tank(-50,50)" )
