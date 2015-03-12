@@ -106,7 +106,7 @@ def handle_key_presses():
         rospy.signal_shutdown( "Quitting..." )
 
     if ' ' <= key_press <= 'z': # if it's in our valid range
-        print "Publishing ", str(key_press)
+        print "Publishing ", str(key_press).upper()
         pub.publish(String(str(key_press))) # publish!
 
     return
@@ -140,8 +140,6 @@ def findMPW(Lines):
     MPW_left = MPW_right = MPW_front = MPW_default = [((0,0),(0,0)),0]
 
     def getLineInfo(line):
-
-
 
         x0, y0, x1, y1 = line[0][0]-CENTER, line[0][1]-CENTER, line[1][0]-CENTER, line[1][1]-CENTER
         A, B, C = (y1-y0), -(x1-x0), (x1*y0-x0*y1) # Ax + By + C = 0
