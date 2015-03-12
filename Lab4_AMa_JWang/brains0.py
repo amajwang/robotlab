@@ -170,10 +170,10 @@ def main():
             dis_threshold = 100
 
             if left_dis < 2 * dis_threshold:
-                angle_speed += 0.5 * (2 * dis_threshold - left_dis)
+                angle_speed += int(0.5 * (2 * dis_threshold - left_dis))
 
             if right_dis < 2 * dis_threshold:
-                angle_speed -= 0.5 * (2 * dis_threshold - right_dis)
+                angle_speed -= int(0.5 * (2 * dis_threshold - right_dis))
 
             if D.MPW_left and D.MPW_right:
                 # left_dis, right_dis = D.MPW_left[2], D.MPW_right[2]
