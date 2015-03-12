@@ -162,7 +162,7 @@ def main():
 
         elif D.STATE == "MOVING_FORWARD":
             
-            if D.MPW_front and D.MPW_front[3] > 400 and abs(D.MPW_front[1]) < pi/8 and D.MPW_front[2] < 300:
+            if D.MPW_front and D.MPW_front[3] > 200 and abs(D.MPW_front[1]) < pi/8 and D.MPW_front[2] < 300:
                 D.STATE = "TURN_LEFT"
 
 
