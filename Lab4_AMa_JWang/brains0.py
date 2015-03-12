@@ -161,11 +161,15 @@ def main():
                 D.STATE = "MOVING_FORWARD"
 
         elif D.STATE == "MOVING_FORWARD":
-        
-            left_diff, left_dis = D.MPW_left[1:3] if D.MPW_left else 0, float("inf")
-            right_diff, right_dis = D.MPW_right[1:3] if D.MPW_right else 0, float("inf")
+            
+            if D.MPW_front and D.MPW_front[3] > 800 and abs(D.MPW_front[1]) < pi/8:
+                D.STATE = "TURN_LEFT"
 
-            angle_speed = int(60 * min(left_diff+pi/2, right_diff-pi/2, key = abs))
+
+            left_angle, left_dis = D.MPW_left[1:3] if D.MPW_left else [0, float("inf")]
+            right_angle, right_dis = D.MPW_right[1:3] if D.MPW_right else [0, float("inf")]
+
+            angle_speed = int(60 * min(left_angle+pi/2, right_angle-pi/2, key = abs))
 
             dis_threshold = 100
 

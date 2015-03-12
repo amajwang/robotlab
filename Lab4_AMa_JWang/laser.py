@@ -39,6 +39,9 @@ REV          = 360              # 360 degrees per rev (range data is stored in d
 # options
 SHOW_HOUGH = False              # set to true to show Hough transformation image
 
+OLD_SCALE = 0.2 
+SCALE = 0.1
+REL_SCALE = OLD_SCALE / SCALE
 
 
 def init_GUI():
@@ -118,18 +121,15 @@ def draw_laser_ranges():
               needed as input to the Hough transformation
     """
 
-    scale = 0.2
-
-    if True:  # for easy commenting out...
-        NUM_RANGES = len(D.ranges) # should be 360
-        for angle in range(NUM_RANGES):
-            # print angle, ":", D.ranges[angle]
-            r, theta = scale*D.ranges[angle], radians(angle+90)
-            end_x, end_y = CENTER + int(r*cos(theta)), CENTER - int(r*sin(theta))
-            # add line to the ranges image, "D.image"
-            cv.Line(D.image, (CENTER,CENTER), (end_x,end_y), cv.RGB(255, 0, 0), 1) # 1 == thickness
-            # add dots to image being used to compute the Hough tr. "D.hough"
-            cv.Line(D.hough, (end_x,end_y), (end_x,end_y), 255, 2) # 1 == thickness
+    NUM_RANGES = len(D.ranges) # should be 360
+    for angle in range(NUM_RANGES):
+        # print angle, ":", D.ranges[angle]
+        r, theta = SCALE*D.ranges[angle], radians(angle+90)
+        end_x, end_y = CENTER + int(r*cos(theta)), CENTER - int(r*sin(theta))
+        # add line to the ranges image, "D.image"
+        cv.Line(D.image, (CENTER,CENTER), (end_x,end_y), cv.RGB(255, 0, 0), 1) # 1 == thickness
+        # add dots to image being used to compute the Hough tr. "D.hough"
+        cv.Line(D.hough, (end_x,end_y), (end_x,end_y), 255, 2) # 1 == thickness
      
     return
 
@@ -141,6 +141,8 @@ def findMPW(Lines):
 
     def getLineInfo(line):
 
+
+
         x0, y0, x1, y1 = line[0][0]-CENTER, line[0][1]-CENTER, line[1][0]-CENTER, line[1][1]-CENTER
         A, B, C = (y1-y0), -(x1-x0), (x1*y0-x0*y1) # Ax + By + C = 0
 
@@ -148,7 +150,7 @@ def findMPW(Lines):
         xi,yi = -A*C/length**2, -B*C/length**2
         r,theta = polar(1j*xi-yi)
 
-        return [line, theta, r, length]
+        return [line, theta, r*REL_SCALE, length*REL_SCALE]
 
     lineinfos = [getLineInfo(line) for line in Lines]
 
