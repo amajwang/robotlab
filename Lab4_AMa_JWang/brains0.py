@@ -207,8 +207,6 @@ def main():
                 angle_speed -= int(0.5 * (2 * dis_threshold - right_dis))
 
             if D.MPW_left and D.MPW_right:
-                print left_dis, right_dis
-
                 if (left_dis - right_dis > dis_threshold and angle_speed > 0) \
                 or (right_dis - left_dis > dis_threshold and angle_speed < 0):
                     angle_speed = 0
