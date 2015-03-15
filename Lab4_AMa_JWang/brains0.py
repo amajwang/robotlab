@@ -32,7 +32,7 @@ D.last_time_printed = 0    # we'll print once in a while
 D.last_time_clocked = D.start_time # the last time we hit the stopwatch
 
 D.turns = ["TURN_LEFT","TURN_LEFT","TURN_RIGHT","TURN_RIGHT","TURN_LEFT","TURN_LEFT","TURN_RIGHT","TURN_RIGHT"]
-D.turns_dis = [300, 300, 250, 100, 200, 300, 300, 300]
+D.turns_dis = [300, 300, 250, 150, 200, 300, 300, 300]
 D.turn_index = 0
 
 def laser_data_callback(data):
@@ -166,9 +166,10 @@ def main():
                 D.last_time_clocked = time.time()
 
         elif D.STATE == "COFFEE!":
-            if current_time > 10 + D.last_time_clocked: 
+            if current_time > 6 + D.last_time_clocked: 
                 D.robot_publisher.publish( "D.tank(50,-50)" )
                 D.STATE = "U_TURN"
+                D.last_time_clocked = time.time()
 
         elif D.STATE == "U_TURN":
             if current_time > 8.4 + D.last_time_clocked: 
@@ -177,7 +178,7 @@ def main():
                 D.last_time_clocked = time.time()
 
         elif D.STATE == "LEAVING_LOUNGE":
-            if current_time > 9 + D.last_time_clocked: 
+            if current_time > 6 + D.last_time_clocked: 
                 D.STATE = "MOVING_FORWARD"
 
         elif D.STATE in ["MOVING_FORWARD", "ENTERING_NEW_HALLWAY"]:
