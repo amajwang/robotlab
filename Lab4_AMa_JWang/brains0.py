@@ -31,7 +31,9 @@ D.start_time = time.time() # start of program
 D.last_time_printed = 0    # we'll print once in a while
 D.last_time_clocked = D.start_time # the last time we hit the stopwatch
 
-
+D.turns = ["TURN_LEFT","TURN_LEFT","TURN_RIGHT","TURN_RIGHT"]
+D.turns_dis = [300, 300, 200, 200]
+D.turn_index = 0
 
 def laser_data_callback(data):
     """ runs with each laser_data message from the laser-handling code """
@@ -86,8 +88,7 @@ def robot_sensor_callback( data ):
         pass
 
     if data.advance == True:  
-        D.robot_publisher.publish( "D.tank(0,0)" ) # Yay, Python!
-        D.STATE = "WAITING_TO_START"  # back to waiting to start
+        D.STATE = "STOP"  # back to waiting to start
         
     if data.play == True:
         D.robot_publisher.publish( "song()" ) # Yay, Python!
@@ -149,21 +150,27 @@ def main():
             if current_time > 4.2 + D.last_time_clocked: # 4.2 seconds of wait
                 D.STATE = "STOP"
 
-        elif D.STATE == "WAITING_TO_START":
-            pass # do nothing
-
-        elif D.STATE == "WAITING":
+        elif D.STATE in ["WAITING_TO_START", "WAITING"]:
             pass # do nothing
 
         elif D.STATE == "90_DEG_TURN":
             if current_time > 4.2 + D.last_time_clocked: 
                 D.robot_publisher.publish( "D.tank(0,0)" )
-                D.STATE = "MOVING_FORWARD"
+                D.STATE = "ENTERING_NEW_HALLWAY"
+                D.last_time_clocked = time.time()
 
-        elif D.STATE == "MOVING_FORWARD":
+        elif D.STATE in ["MOVING_FORWARD", "ENTERING_NEW_HALLWAY"]:
             
-            if D.MPW_front and D.MPW_front[3] > 150 and abs(D.MPW_front[1]) < pi/8 and D.MPW_front[2] < 300:
-                D.STATE = "TURN_LEFT"
+            min_wall_len = 150
+
+            if D.STATE == "ENTERING_NEW_HALLWAY":
+                if current_time > 8 + D.last_time_clocked:
+                    D.STATE = "MOVING_FORWARD"
+            
+            elif D.MPW_front and D.MPW_front[3] > min_wall_len and abs(D.MPW_front[1]) < pi/8 \
+            and D.MPW_front[2] < D.turns_dis[D.turn_index]:
+                D.STATE = D.turns[D.turn_index]
+                D.turn_index += 1
 
 
             left_angle, left_dis = D.MPW_left[1:3] if D.MPW_left else [0, float("inf")]
@@ -180,15 +187,11 @@ def main():
                 angle_speed -= int(0.5 * (2 * dis_threshold - right_dis))
 
             if D.MPW_left and D.MPW_right:
-                # left_dis, right_dis = D.MPW_left[2], D.MPW_right[2]
                 print left_dis, right_dis
 
                 if (left_dis - right_dis > dis_threshold and angle_speed > 0) \
                 or (right_dis - left_dis > dis_threshold and angle_speed < 0):
                     angle_speed = 0
-
-            print angle_speed
-
 
             forward_speed = 210 - abs(angle_speed)
 
@@ -198,25 +201,17 @@ def main():
             D.robot_publisher.publish( "D.tank({},{})".format(lspeed,rspeed) )
 
         elif D.STATE == "STOP":
+            D.turn_index = 0
             D.robot_publisher.publish( "D.tank(0,0)" )
             D.STATE = "WAITING_TO_START"
 
-        elif D.STATE == "TURN_LEFT":
+        elif D.STATE in ["TURN_LEFT", "TURN_RIGHT"]:
             D.last_time_clocked = time.time()
-            D.robot_publisher.publish( "D.tank(-50,50)" ) 
+            D.robot_publisher.publish( "D.tank(-50,50)" if D.STATE == "TURN_LEFT" else "D.tank(50,-50)" )
             D.STATE = "90_DEG_TURN"
 
-        elif D.STATE == "TURN_RIGHT":
-            D.last_time_clocked = time.time()
-            D.robot_publisher.publish( "D.tank(50,-50)" )
-            D.STATE = "90_DEG_TURN"
-
-        elif D.STATE == "ROTATE_IN_PLACE_LEFT":
-            D.robot_publisher.publish( "D.tank(-50,50)" )
-            D.STATE = "WAITING"
-
-        elif D.STATE == "ROTATE_IN_PLACE_RIGHT":
-            D.robot_publisher.publish( "D.tank(50,-50)" )
+        elif D.STATE in ["ROTATE_IN_PLACE_LEFT", "ROTATE_IN_PLACE_RIGHT"]:
+            D.robot_publisher.publish( "D.tank(-50,50)" if D.STATE == "ROTATE_IN_PLACE_LEFT" else "D.tank(50,-50)" )
             D.STATE = "WAITING"
 
 

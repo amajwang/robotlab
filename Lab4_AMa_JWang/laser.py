@@ -148,7 +148,7 @@ def findMPW(Lines):
         xi,yi = -A*C/length**2, -B*C/length**2
         r,theta = polar(1j*xi-yi)
 
-        return [line, theta, r*REL_SCALE, length*REL_SCALE]
+        return [line, theta, r*REL_SCALE, length*REL_SCALE, (x0+x1)/2*REL_SCALE]
 
     lineinfos = [getLineInfo(line) for line in Lines]
 
