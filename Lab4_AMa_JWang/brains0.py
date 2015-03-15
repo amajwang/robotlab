@@ -32,7 +32,7 @@ D.last_time_printed = 0    # we'll print once in a while
 D.last_time_clocked = D.start_time # the last time we hit the stopwatch
 
 D.turns = ["TURN_LEFT","TURN_LEFT","TURN_RIGHT","TURN_RIGHT","TURN_LEFT","TURN_LEFT","TURN_RIGHT","TURN_RIGHT"]
-D.turns_dis = [300, 300, 200, 100, 200, 300, 300, 300]
+D.turns_dis = [300, 300, 250, 100, 200, 300, 300, 300]
 D.turn_index = 0
 
 def laser_data_callback(data):
@@ -148,7 +148,8 @@ def main():
         # here is our state machine!
         if D.STATE == "BACKING_UP_FOR_A_BIT":
             if current_time > 4.2 + D.last_time_clocked: # 4.2 seconds of wait
-                D.STATE = "STOP"
+                D.robot_publisher.publish( "D.tank(0,0)" )
+                D.STATE = "WAITING"
 
         elif D.STATE in ["WAITING_TO_START", "WAITING"]:
             pass # do nothing
