@@ -178,7 +178,7 @@ def main():
                 D.last_time_clocked = time.time()
 
         elif D.STATE == "LEAVING_LOUNGE":
-            if current_time > 6 + D.last_time_clocked: 
+            if current_time > 5.5 + D.last_time_clocked: 
                 D.STATE = "MOVING_FORWARD"
 
         elif D.STATE in ["MOVING_FORWARD", "ENTERING_NEW_HALLWAY"]:
