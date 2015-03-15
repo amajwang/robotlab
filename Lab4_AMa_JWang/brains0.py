@@ -31,8 +31,8 @@ D.start_time = time.time() # start of program
 D.last_time_printed = 0    # we'll print once in a while
 D.last_time_clocked = D.start_time # the last time we hit the stopwatch
 
-D.turns = ["TURN_LEFT","TURN_LEFT","TURN_RIGHT","TURN_RIGHT"]
-D.turns_dis = [300, 300, 200, 200]
+D.turns = ["TURN_LEFT","TURN_LEFT","TURN_RIGHT","TURN_RIGHT","TURN_LEFT","TURN_LEFT","TURN_RIGHT","TURN_RIGHT"]
+D.turns_dis = [300, 300, 200, 100, 200, 300, 300, 300]
 D.turn_index = 0
 
 def laser_data_callback(data):
@@ -156,8 +156,28 @@ def main():
         elif D.STATE == "90_DEG_TURN":
             if current_time > 4.2 + D.last_time_clocked: 
                 D.robot_publisher.publish( "D.tank(0,0)" )
-                D.STATE = "ENTERING_NEW_HALLWAY"
+                if D.turn_index == 4:
+                    D.STATE = "COFFEE!" 
+                    D.robot_publisher.publish( "D.tank(150,150)" )
+                else:
+                    D.STATE = "ENTERING_NEW_HALLWAY"
+
                 D.last_time_clocked = time.time()
+
+        elif D.STATE == "COFFEE!":
+            if current_time > 10 + D.last_time_clocked: 
+                D.robot_publisher.publish( "D.tank(50,-50)" )
+                D.STATE = "U_TURN"
+
+        elif D.STATE == "U_TURN":
+            if current_time > 8.4 + D.last_time_clocked: 
+                D.robot_publisher.publish( "D.tank(150,150)" )
+                D.STATE = "LEAVING_LOUNGE"
+                D.last_time_clocked = time.time()
+
+        elif D.STATE == "LEAVING_LOUNGE":
+            if current_time > 9 + D.last_time_clocked: 
+                D.STATE = "MOVING_FORWARD"
 
         elif D.STATE in ["MOVING_FORWARD", "ENTERING_NEW_HALLWAY"]:
             
@@ -213,9 +233,6 @@ def main():
         elif D.STATE in ["ROTATE_IN_PLACE_LEFT", "ROTATE_IN_PLACE_RIGHT"]:
             D.robot_publisher.publish( "D.tank(-50,50)" if D.STATE == "ROTATE_IN_PLACE_LEFT" else "D.tank(50,-50)" )
             D.STATE = "WAITING"
-
-
-
 
         else:
             print "I don't recognize the state", D.STATE
