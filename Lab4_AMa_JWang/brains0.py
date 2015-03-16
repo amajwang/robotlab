@@ -166,24 +166,24 @@ def main():
                 D.last_time_clocked = time.time()
 
         elif D.STATE == "COFFEE!":
-            if current_time > 6 + D.last_time_clocked: 
+            if current_time > 15 + D.last_time_clocked: 
                 D.robot_publisher.publish( "D.tank(50,-50)" )
                 D.STATE = "U_TURN"
                 D.last_time_clocked = time.time()
 
         elif D.STATE == "U_TURN":
-            if current_time > 8.4 + D.last_time_clocked: 
+            if current_time > 8.3 + D.last_time_clocked: 
                 D.robot_publisher.publish( "D.tank(150,150)" )
                 D.STATE = "LEAVING_LOUNGE"
                 D.last_time_clocked = time.time()
 
         elif D.STATE == "LEAVING_LOUNGE":
-            if current_time > 5.5 + D.last_time_clocked: 
+            if current_time > 11 + D.last_time_clocked: 
                 D.STATE = "MOVING_FORWARD"
 
         elif D.STATE in ["MOVING_FORWARD", "ENTERING_NEW_HALLWAY"]:
             
-            min_wall_len = 150
+            min_wall_len = 120
 
             if D.STATE == "ENTERING_NEW_HALLWAY":
                 if current_time > 8 + D.last_time_clocked:
