@@ -114,8 +114,13 @@ def init_globals():
 
     D.pixel_delta = 10
 
-    D.hue_interval = 20
-    D.rgb_interval = 100
+    D.hue_interval = 6
+    D.rgb_interval = 120
+
+    D.area_low_threshold = 20000
+    D.area_high_threshold = 40000
+
+    D.target_x, D.target_y = 455, 340
 
 
 ################## END INITIALIZATION FUNCTIONS ####################
@@ -192,6 +197,8 @@ def find_biggest_region():
             biggestArea = nextArea
         contours = contours.h_next()
     
+    D.area = biggestArea
+
     # Use OpenCV to get a bounding rectangle for the largest contour
     br = cv.BoundingRect(biggest, update=0)
 
@@ -199,10 +206,6 @@ def find_biggest_region():
 
     # Example of drawing a red box
     # Variables: ulx ~ upper left x, lry ~ lower right y, etc.
-    # ulx = 142
-    # lrx = 200
-    # uly = 142
-    # lry = 150
     (ulx, uly, sx, sy) = br
     lrx, lry = ulx + sx, uly + sy
     cv.PolyLine(D.image, [[(ulx,uly), (lrx,uly), 
@@ -213,9 +216,9 @@ def find_biggest_region():
 
     # Example of drawing a yellow circle
     # Variables: cenx, ceny
-    cenx = (ulx + lrx) / 2
-    ceny = (uly + lry) / 2
-    cv.Circle(D.image, (cenx,ceny), 8, 
+    D.cenx = (ulx + lrx) / 2
+    D.ceny = (uly + lry) / 2
+    cv.Circle(D.image, (D.cenx,D.ceny), 8, 
                         cv.RGB(255, 255, 0), # color == yellow
                         thickness=1, lineType=8, shift=0)
 
@@ -226,19 +229,17 @@ def draw_text_to_image():
     # draw a rectangle under the text to make it more visible
     cv.Rectangle(D.image, (0,0), (100,50), cv.RGB(255,255,255), cv.CV_FILLED)
     # place some text there
-    D.STATE = "hi!" # probably not the state name you want...
     cv.PutText(D.image, D.STATE, (5,10), D.font, cv.RGB(0,0,0))
     # and some values
-    randomness = random.randint(-100,100)
-    area = 4242 + randomness
-    area_string = str(area)
+    area_string = str(D.area)
     cv.PutText(D.image, area_string, (5,25), D.font, cv.RGB(0,0,0))
 
+    firing_string = 'Firing Enabled' if D.firing_enabled else 'Firing Disabled'
+    cv.PutText(D.image, firing_string, (5,40), D.font, cv.RGB(0,0,0))
 
 def target_lock():
     r,g,b,h,s,v = [int(x) for x in D.model_pixel]
-    D.thresholds['low_red'] = D.thresholds['low_green'] = D.thresholds['low_blue'] = 0
-    D.thresholds['high_red'] = D.thresholds['high_green'] = D.thresholds['high_blue'] = 255
+
     D.thresholds['low_sat'] = D.thresholds['low_val'] = 0
     D.thresholds['high_sat'] = D.thresholds['high_val'] = 255   
 
@@ -251,6 +252,7 @@ def target_lock():
     D.thresholds['high_green'] = g + D.rgb_interval
     D.thresholds['low_blue'] = b - D.rgb_interval
     D.thresholds['high_blue'] = b + D.rgb_interval
+
     set_all_trackbars()
 
 def set_all_trackbars():
@@ -299,17 +301,17 @@ def check_key_press(key_press):
         rospy.signal_shutdown( "Quitting..." )
         return
 
-    elif key_press == 185:
+    elif key_press == 185: # NUM 9
         D.hue_interval += 2
         target_lock()
-    elif key_press == 179:
+    elif key_press == 179: # NUM 3
         D.hue_interval -= 2
         target_lock()
 
-    elif key_press == 183:
+    elif key_press == 183: # NUM 7
         D.rgb_interval += 5
         target_lock()
-    elif key_press == 177:
+    elif key_press == 177: # NUM 1
         D.rgb_interval -= 5
         target_lock()
 
@@ -327,6 +329,9 @@ def check_key_press(key_press):
         D.launchcontrol.fire()
     elif key_press in [ord('z'), ord(' ')]:
         D.launchcontrol.stop()
+
+    elif key_press == ord('t'):
+        D.firing_enabled = not D.firing_enabled
         
     elif key_press == ord('S'):  # save to file
         x = D.thresholds   # the value we will save
@@ -459,6 +464,34 @@ def main():
 
         # Currently selected threshold image:
         cv.ShowImage('threshold', D.threshed_image )
+
+        D.STATE = "hi!"
+
+        cv.Circle(D.image, (D.target_x, D.target_y), 8, 
+                    cv.RGB(255, 0, 0),
+                    thickness=1, lineType=8, shift=0)
+
+        if D.STATE == "starting...":
+            D.STATE = "center"
+
+        if D.STATE == "center":
+            if abs(D.target_x - D.cenx) < 10 and abs(D.target_x - D.cenx) < 10:
+                D.launchcontrol.stop()
+                D.STATE = "fire"
+
+            elif D.target_x >= D.cenx + 10:
+                D.launchcontrol.setHSpeed(-1)
+            elif D.target_x <= D.cenx - 10:
+                D.launchcontrol.setHSpeed(1)
+            elif D.target_y >= D.ceny + 10:
+                D.launchcontrol.setVSpeed(-1)
+            elif D.target_y <= D.ceny - 10:
+                D.launchcontrol.setVSpeed(1)
+
+        if D.STATE == "fire":
+            if D.area_low_threshold < D.area < D.area_high_threshold:
+                D.launchcontrol.fire()
+
 
     # here, the main loop has ended
     print "Shutting down..."
