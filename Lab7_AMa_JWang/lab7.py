@@ -28,7 +28,7 @@ class Data:
 
 # object (of class Data) to hold the global state of the system
 D = Data()
-D.STATE = "starting..."
+D.STATE = "disabled"
 
 # do we want to use a half-sized image?
 D.half_size = False
@@ -117,11 +117,13 @@ def init_globals():
     D.hue_interval = 6
     D.rgb_interval = 120
 
-    D.area_low_threshold = 20000
-    D.area_high_threshold = 40000
+    D.area_low_threshold = 10000
+    D.area_high_threshold = 50000
 
-    D.target_x, D.target_y = 455, 340
+    D.target_x, D.target_y = 405, 340
+    D.armed = False
 
+    D.last_time_clocked = time.time()
 
 ################## END INITIALIZATION FUNCTIONS ####################
 
@@ -228,14 +230,16 @@ def draw_text_to_image():
     """ A function to handle drawing things to the image """
     # draw a rectangle under the text to make it more visible
     cv.Rectangle(D.image, (0,0), (100,50), cv.RGB(255,255,255), cv.CV_FILLED)
+
+    text_color = cv.RGB(255,0,0) if D.area_low_threshold < D.area < D.area_high_threshold else cv.RGB(0,0,0)
     # place some text there
-    cv.PutText(D.image, D.STATE, (5,10), D.font, cv.RGB(0,0,0))
+    cv.PutText(D.image, D.STATE, (5,10), D.font, text_color)
     # and some values
     area_string = str(D.area)
-    cv.PutText(D.image, area_string, (5,25), D.font, cv.RGB(0,0,0))
+    cv.PutText(D.image, area_string, (5,25), D.font, text_color)
 
-    firing_string = 'Firing Enabled' if D.firing_enabled else 'Firing Disabled'
-    cv.PutText(D.image, firing_string, (5,40), D.font, cv.RGB(0,0,0))
+    armed_string = 'Armed' if D.armed else 'Disarmed'
+    cv.PutText(D.image, armed_string, (5,40), D.font, text_color)
 
 def target_lock():
     r,g,b,h,s,v = [int(x) for x in D.model_pixel]
@@ -331,7 +335,9 @@ def check_key_press(key_press):
         D.launchcontrol.stop()
 
     elif key_press == ord('t'):
-        D.firing_enabled = not D.firing_enabled
+        D.STATE = "disabled" if D.STATE != "disabled" else "start"
+    elif key_press == ord('a'):
+        D.armed = not D.armed
         
     elif key_press == ord('S'):  # save to file
         x = D.thresholds   # the value we will save
@@ -402,6 +408,9 @@ def init_images():
     D.hsv = cv.CreateImage(D.img_size, 8, 3)
 
 
+def get_speed(d):
+    return (1 if abs(d) > 100 else 0.2 if abs(d) > 40 else 0) * cmp(d, 0)
+    
 
 ##################### END CALLBACK FUNCTIONS #######################
 
@@ -458,6 +467,11 @@ def main():
         # Handle key presses only if it's a real key (255 = "no key pressed")
         if key_press != 255:  check_key_press(key_press)
 
+
+        cv.Circle(D.image, (D.target_x, D.target_y), 8, 
+                    cv.RGB(255, 0, 0),
+                    thickness=1, lineType=8, shift=0)
+
         # Update the displays:
         # Main image:
         cv.ShowImage('image', D.image)
@@ -465,32 +479,30 @@ def main():
         # Currently selected threshold image:
         cv.ShowImage('threshold', D.threshed_image )
 
-        D.STATE = "hi!"
 
-        cv.Circle(D.image, (D.target_x, D.target_y), 8, 
-                    cv.RGB(255, 0, 0),
-                    thickness=1, lineType=8, shift=0)
-
-        if D.STATE == "starting...":
+        if D.STATE == "start":
             D.STATE = "center"
 
         if D.STATE == "center":
-            if abs(D.target_x - D.cenx) < 10 and abs(D.target_x - D.cenx) < 10:
-                D.launchcontrol.stop()
-                D.STATE = "fire"
+            if D.area_low_threshold < D.area < D.area_high_threshold:
+                if abs(D.target_x - D.cenx) < 40 and abs(D.target_y - D.ceny) < 40:
+                    D.launchcontrol.stop()
+                    D.STATE = "fire"
+                    D.last_time_clocked = time.time()
+                else:
+                    D.launchcontrol.setVSpeed(get_speed(D.target_y - D.ceny))
+                    D.launchcontrol.setHSpeed(get_speed(D.target_x - D.cenx))
 
-            elif D.target_x >= D.cenx + 10:
-                D.launchcontrol.setHSpeed(-1)
-            elif D.target_x <= D.cenx - 10:
-                D.launchcontrol.setHSpeed(1)
-            elif D.target_y >= D.ceny + 10:
-                D.launchcontrol.setVSpeed(-1)
-            elif D.target_y <= D.ceny - 10:
-                D.launchcontrol.setVSpeed(1)
+            else:
+                D.launchcontrol.stop()
 
         if D.STATE == "fire":
-            if D.area_low_threshold < D.area < D.area_high_threshold:
-                D.launchcontrol.fire()
+            if D.area_low_threshold < D.area < D.area_high_threshold and abs(D.target_x - D.cenx) < 40 and abs(D.target_y - D.ceny) < 40:
+                if time.time() - D.last_time_clocked > 1 and D.armed:
+                    D.launchcontrol.fire()
+                    D.STATE = "disabled"
+            else:
+                D.STATE = "center"
 
 
     # here, the main loop has ended
